@@ -1,0 +1,53 @@
+# ==============================================================================
+# Clef-Flash Fine-Tuning Configuration (Symptom2Disease 80/20 Partition)
+# ==============================================================================
+
+model:
+  model_id: "Cloudflare/clef-flash"
+  cache_dir: "./model_cache"
+  device: "cuda"
+
+data:
+  train_path: "data/train_80_20.csv"
+  test_path: "data/test_80_20.csv"
+  criteria_path: "data/criteria.json"
+  use_criteria: false                # Set to false: trains on naked disease names without criteria descriptions
+  question_instruction: "Which disease does this patient most likely have based on the reported symptoms?"
+
+training:
+  # Mode options:
+  # 1. "lora"       - PEFT LoRA on Qwen attention + train JointSchemaHead (Recommended: fits 16GB-24GB VRAM)
+  # 2. "head_only"  - Freeze Qwen backbone, train only JointSchemaHead (Ultra fast, <12GB VRAM)
+  # 3. "full"       - End-to-end full parameter training (Requires 48GB-80GB VRAM)
+  mode: "lora"
+
+  # Quantization for base backbone: "none", "8bit", or "4bit" (QLoRA)
+  quantization: "4bit"
+
+  # LoRA Parameters (Used when mode == "lora")
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+
+  # Optimization Hyperparameters
+  batch_size: 4
+  gradient_accumulation_steps: 4     # Effective batch size = 16
+  learning_rate: 1.0e-4
+  head_learning_rate: 3.0e-4        # Higher learning rate for the schema head
+  num_epochs: 5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  seed: 42
+
+output:
+  output_dir: "./checkpoints"
+  save_best_model: true
+  metric_for_best_model: "eval_accuracy"
+  logging_steps: 10
+  eval_steps: 20

@@ -1,0 +1,37 @@
+# Bytecode & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Model Checkpoints & Large Weights
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+
+# Cache & Downloads
+model_cache/
+**/model_cache/
+chunks/
+part_*
+*.log
+
+# Sensitive Files
+.env
+.env.*
+secrets.json
+*.pem
+*.key
+
+# OS Metadata
+.DS_Store
+Thumbs.db
