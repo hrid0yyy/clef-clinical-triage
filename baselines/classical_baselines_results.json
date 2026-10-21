@@ -1,0 +1,61 @@
+{
+  "train_size": 960,
+  "test_size": 240,
+  "seed": 42,
+  "cpu": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+  "models": {
+    "TF-IDF + Linear SVM": {
+      "best_params": {
+        "clf__C": 10
+      },
+      "cv_accuracy": 97.19,
+      "test_accuracy": 98.75,
+      "test_correct": 237,
+      "test_accuracy_ci95": [
+        96.39,
+        99.57
+      ],
+      "test_macro_f1": 0.9876,
+      "latency_ms_mean": 0.71,
+      "latency_ms_sd": 0.238
+    },
+    "TF-IDF + Logistic Regression": {
+      "best_params": {
+        "clf__C": 100
+      },
+      "cv_accuracy": 97.08,
+      "test_accuracy": 98.75,
+      "test_correct": 237,
+      "test_accuracy_ci95": [
+        96.39,
+        99.57
+      ],
+      "test_macro_f1": 0.9876,
+      "latency_ms_mean": 0.793,
+      "latency_ms_sd": 0.373
+    },
+    "TF-IDF + Random Forest": {
+      "best_params": {
+        "clf__max_features": "log2",
+        "clf__n_estimators": 500
+      },
+      "cv_accuracy": 95.94,
+      "test_accuracy": 96.67,
+      "test_correct": 232,
+      "test_accuracy_ci95": [
+        93.56,
+        98.3
+      ],
+      "test_macro_f1": 0.9665,
+      "latency_ms_mean": 44.988,
+      "latency_ms_sd": 9.099,
+      "seed_accuracies": [
+        95.0,
+        95.83,
+        95.42,
+        97.08,
+        96.25
+      ]
+    }
+  }
+}

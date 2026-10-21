@@ -1,0 +1,342 @@
+[
+  {
+    "case_id": 1,
+    "true_label": "Psoriasis",
+    "patient_text": "I have an itchy red rash on my arms with dry silvery scales peeling off. My skin is cracked and bleeds occasionally.",
+    "baseline_prediction": "Psoriasis",
+    "baseline_probability": 0.9999985694885254,
+    "top3_baseline": [
+      {
+        "disease": "Psoriasis",
+        "probability": 0.9999985694885254
+      },
+      {
+        "disease": "Arthritis",
+        "probability": 1.255418737855507e-07
+      },
+      {
+        "disease": "drug reaction",
+        "probability": 1.1793568432949542e-07
+      }
+    ],
+    "attributions": [
+      {
+        "clause": "dry silvery scales peeling off",
+        "ablated_target_prob": 0.0011752276914194226,
+        "marginal_drop": 0.998823341797106,
+        "percent_confidence_drop": 99.88247706274015,
+        "prediction_flipped": true,
+        "new_top_prediction": "Impetigo",
+        "new_top_prob": 0.9959024786949158,
+        "surging_alternatives": [
+          {
+            "disease": "Impetigo",
+            "probability": 0.9959024786949158
+          },
+          {
+            "disease": "Chicken pox",
+            "probability": 0.0017099460819736123
+          }
+        ]
+      },
+      {
+        "clause": "skin is cracked",
+        "ablated_target_prob": 0.9999960660934448,
+        "marginal_drop": 2.5033950805664062e-06,
+        "percent_confidence_drop": 0.00025033986617069173,
+        "prediction_flipped": false,
+        "new_top_prediction": "Psoriasis",
+        "new_top_prob": 0.9999960660934448,
+        "surging_alternatives": [
+          {
+            "disease": "Arthritis",
+            "probability": 9.952057098416844e-07
+          }
+        ]
+      },
+      {
+        "clause": "itchy red rash",
+        "ablated_target_prob": 0.9999984502792358,
+        "marginal_drop": 1.1920928955078125e-07,
+        "percent_confidence_drop": 1.1920946008128178e-05,
+        "prediction_flipped": false,
+        "new_top_prediction": "Psoriasis",
+        "new_top_prob": 0.9999984502792358,
+        "surging_alternatives": [
+          {
+            "disease": "drug reaction",
+            "probability": 2.742086451235082e-07
+          }
+        ]
+      },
+      {
+        "clause": "bleeds occasionally",
+        "ablated_target_prob": 0.9999986886978149,
+        "marginal_drop": -1.1920928955078125e-07,
+        "percent_confidence_drop": -1.1920946008128178e-05,
+        "prediction_flipped": false,
+        "new_top_prediction": "Psoriasis",
+        "new_top_prob": 0.9999986886978149,
+        "surging_alternatives": [
+          {
+            "disease": "Arthritis",
+            "probability": 1.3156677880488132e-07
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "case_id": 2,
+    "true_label": "Bronchial Asthma",
+    "patient_text": "I've been struggling to breathe, coughing constantly, and coughing up a lot of thick mucoid sputum while feeling exhausted.",
+    "baseline_prediction": "Bronchial Asthma",
+    "baseline_probability": 0.999998927116394,
+    "top3_baseline": [
+      {
+        "disease": "Bronchial Asthma",
+        "probability": 0.999998927116394
+      },
+      {
+        "disease": "allergy",
+        "probability": 3.6898822486364224e-07
+      },
+      {
+        "disease": "Pneumonia",
+        "probability": 1.7429769627597125e-07
+      }
+    ],
+    "attributions": [
+      {
+        "clause": "coughing up a lot of thick mucoid sputum",
+        "ablated_target_prob": 0.9999964237213135,
+        "marginal_drop": 2.5033950805664062e-06,
+        "percent_confidence_drop": 0.0002503397766420829,
+        "prediction_flipped": false,
+        "new_top_prediction": "Bronchial Asthma",
+        "new_top_prob": 0.9999964237213135,
+        "surging_alternatives": [
+          {
+            "disease": "allergy",
+            "probability": 3.1875640615908196e-06
+          }
+        ]
+      },
+      {
+        "clause": "struggling to breathe",
+        "ablated_target_prob": 0.999998927116394,
+        "marginal_drop": 0.0,
+        "percent_confidence_drop": 0.0,
+        "prediction_flipped": false,
+        "new_top_prediction": "Bronchial Asthma",
+        "new_top_prob": 0.999998927116394,
+        "surging_alternatives": [
+          {
+            "disease": "Common Cold",
+            "probability": 2.9649035582224315e-07
+          }
+        ]
+      },
+      {
+        "clause": "coughing constantly",
+        "ablated_target_prob": 0.999998927116394,
+        "marginal_drop": 0.0,
+        "percent_confidence_drop": 0.0,
+        "prediction_flipped": false,
+        "new_top_prediction": "Bronchial Asthma",
+        "new_top_prob": 0.999998927116394,
+        "surging_alternatives": [
+          {
+            "disease": "Pneumonia",
+            "probability": 3.6898822486364224e-07
+          }
+        ]
+      },
+      {
+        "clause": "feeling exhausted",
+        "ablated_target_prob": 0.9999990463256836,
+        "marginal_drop": -1.1920928955078125e-07,
+        "percent_confidence_drop": -1.192094174486109e-05,
+        "prediction_flipped": false,
+        "new_top_prediction": "Bronchial Asthma",
+        "new_top_prob": 0.9999990463256836,
+        "surging_alternatives": [
+          {
+            "disease": "allergy",
+            "probability": 2.2380271502697724e-07
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "case_id": 3,
+    "true_label": "Malaria",
+    "patient_text": "I have been experiencing severe shaking chills that recur every two days, followed by burning high fevers and drenching sweat.",
+    "baseline_prediction": "Malaria",
+    "baseline_probability": 0.9997509121894836,
+    "top3_baseline": [
+      {
+        "disease": "Malaria",
+        "probability": 0.9997509121894836
+      },
+      {
+        "disease": "Dengue",
+        "probability": 4.26386613980867e-05
+      },
+      {
+        "disease": "Typhoid",
+        "probability": 2.2822832761448808e-05
+      }
+    ],
+    "attributions": [
+      {
+        "clause": "severe shaking chills",
+        "ablated_target_prob": 0.9995762705802917,
+        "marginal_drop": 0.00017464160919189453,
+        "percent_confidence_drop": 0.017468512112624564,
+        "prediction_flipped": false,
+        "new_top_prediction": "Malaria",
+        "new_top_prob": 0.9995762705802917,
+        "surging_alternatives": [
+          {
+            "disease": "Dengue",
+            "probability": 0.00023777781461831182
+          }
+        ]
+      },
+      {
+        "clause": "burning high fevers",
+        "ablated_target_prob": 0.9996892213821411,
+        "marginal_drop": 6.16908073425293e-05,
+        "percent_confidence_drop": 0.006170617759920282,
+        "prediction_flipped": false,
+        "new_top_prediction": "Malaria",
+        "new_top_prob": 0.9996892213821411,
+        "surging_alternatives": [
+          {
+            "disease": "Dengue",
+            "probability": 4.831295518670231e-05
+          }
+        ]
+      },
+      {
+        "clause": "drenching sweat",
+        "ablated_target_prob": 0.9998459815979004,
+        "marginal_drop": -9.506940841674805e-05,
+        "percent_confidence_drop": -0.009509309494756375,
+        "prediction_flipped": false,
+        "new_top_prediction": "Malaria",
+        "new_top_prob": 0.9998459815979004,
+        "surging_alternatives": [
+          {
+            "disease": "Dengue",
+            "probability": 4.005912342108786e-05
+          }
+        ]
+      },
+      {
+        "clause": "recur every two days",
+        "ablated_target_prob": 0.9998927116394043,
+        "marginal_drop": -0.0001417994499206543,
+        "percent_confidence_drop": -0.014183477923526908,
+        "prediction_flipped": false,
+        "new_top_prediction": "Malaria",
+        "new_top_prob": 0.9998927116394043,
+        "surging_alternatives": [
+          {
+            "disease": "Dengue",
+            "probability": 2.689568282221444e-05
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "case_id": 4,
+    "true_label": "Arthritis",
+    "patient_text": "My neck has been extremely stiff and my muscles have been extremely weak with painful swelling in my joints making it difficult to walk.",
+    "baseline_prediction": "Arthritis",
+    "baseline_probability": 0.9869391918182373,
+    "top3_baseline": [
+      {
+        "disease": "Arthritis",
+        "probability": 0.9869391918182373
+      },
+      {
+        "disease": "Psoriasis",
+        "probability": 0.00998274888843298
+      },
+      {
+        "disease": "Dengue",
+        "probability": 0.0015309040900319815
+      }
+    ],
+    "attributions": [
+      {
+        "clause": "painful swelling in my joints",
+        "ablated_target_prob": 0.08176311105489731,
+        "marginal_drop": 0.90517608076334,
+        "percent_confidence_drop": 91.71548645218301,
+        "prediction_flipped": true,
+        "new_top_prediction": "Cervical spondylosis",
+        "new_top_prob": 0.39006999135017395,
+        "surging_alternatives": [
+          {
+            "disease": "Cervical spondylosis",
+            "probability": 0.39006999135017395
+          },
+          {
+            "disease": "drug reaction",
+            "probability": 0.36643683910369873
+          }
+        ]
+      },
+      {
+        "clause": "neck has been extremely stiff",
+        "ablated_target_prob": 0.9802016615867615,
+        "marginal_drop": 0.00673753023147583,
+        "percent_confidence_drop": 0.6826692350785344,
+        "prediction_flipped": false,
+        "new_top_prediction": "Arthritis",
+        "new_top_prob": 0.9802016615867615,
+        "surging_alternatives": [
+          {
+            "disease": "Psoriasis",
+            "probability": 0.013134710490703583
+          }
+        ]
+      },
+      {
+        "clause": "muscles have been extremely weak",
+        "ablated_target_prob": 0.9921393990516663,
+        "marginal_drop": -0.005200207233428955,
+        "percent_confidence_drop": -0.526902495770648,
+        "prediction_flipped": false,
+        "new_top_prediction": "Arthritis",
+        "new_top_prob": 0.9921393990516663,
+        "surging_alternatives": [
+          {
+            "disease": "Psoriasis",
+            "probability": 0.0068971868604421616
+          }
+        ]
+      },
+      {
+        "clause": "difficult to walk",
+        "ablated_target_prob": 0.9924836754798889,
+        "marginal_drop": -0.005544483661651611,
+        "percent_confidence_drop": -0.5617857419804165,
+        "prediction_flipped": false,
+        "new_top_prediction": "Arthritis",
+        "new_top_prob": 0.9924836754798889,
+        "surging_alternatives": [
+          {
+            "disease": "Psoriasis",
+            "probability": 0.005901523400098085
+          }
+        ]
+      }
+    ]
+  }
+]

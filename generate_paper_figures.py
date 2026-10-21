@@ -11,10 +11,7 @@ import os
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-try:
-    import seaborn as sns
-except ImportError:
-    sns = None
+import seaborn as sns
 
 def set_publication_style():
     plt.rcParams.update({
@@ -50,36 +47,37 @@ def generate_learning_curves(history_json_path, output_dir="figures"):
 
     set_publication_style()
 
-    # Figure 1: Clean Loss & Diagnostic Accuracy Curves
+    # Figure 1: Dual Loss & Accuracy Curves
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
 
-    # Subplot 1: Training Loss Trajectory
+    # Subplot 1: Loss Trajectory
     valid_train_epochs = [e for e, l in zip(epochs, train_loss) if l is not None]
     valid_train_loss = [l for l in train_loss if l is not None]
     
-    ax1.plot(valid_train_epochs, valid_train_loss, marker='o', color='#1f77b4', linewidth=2.4, label='Training Loss')
-    for e, l in zip(valid_train_epochs, valid_train_loss):
-        ax1.annotate(f"{l:.3f}", (e, l), textcoords="offset points", xytext=(0, 9), ha='center', fontsize=9, fontweight='bold')
+    ax1.plot(valid_train_epochs, valid_train_loss, marker='o', color='#1f77b4', linewidth=2.2, label='Training Loss')
+    valid_eval_epochs = [e for e, l in zip(epochs, eval_loss) if l is not None]
+    valid_eval_loss = [l for l in eval_loss if l is not None]
+    if valid_eval_loss:
+        ax1.plot(valid_eval_epochs, valid_eval_loss, marker='s', color='#ff7f0e', linewidth=2.2, linestyle='--', label='Test Loss')
 
-    ax1.set_title('(a) Training Cross-Entropy Loss Progression', pad=10, fontweight='bold')
-    ax1.set_xlabel('Epoch', fontweight='bold')
-    ax1.set_ylabel('Loss (Cross-Entropy)', fontweight='bold')
-    ax1.set_ylim(-0.05, max(valid_train_loss) + 0.15)
-    ax1.legend(frameon=True, facecolor='white', framealpha=0.9, loc='upper right')
-    ax1.set_xticks(valid_train_epochs)
+    ax1.set_title('(a) Cross-Entropy Loss Progression', pad=10, fontweight='bold')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss (Cross-Entropy)')
+    ax1.legend(frameon=True, facecolor='white', framealpha=0.9)
+    ax1.set_xticks(epochs)
 
-    # Subplot 2: Diagnostic Accuracy Trajectory
-    ax2.plot(epochs, top1_acc, marker='o', color='#2ca02c', linewidth=2.4, label='Diagnostic Accuracy')
-    base_acc = baseline.get("top1_accuracy", 65.0)
-    ax2.axhline(base_acc, color='gray', linestyle=':', linewidth=1.8, label=f'Zero-Shot Baseline ({base_acc:.1f}%)')
+    # Subplot 2: Accuracy Trajectory
+    ax2.plot(epochs, top1_acc, marker='o', color='#2ca02c', linewidth=2.4, label='Top-1 Accuracy')
+    ax2.plot(epochs, top3_acc, marker='^', color='#9467bd', linewidth=2.2, linestyle='--', label='Top-3 Accuracy')
+    ax2.axhline(baseline.get("top1_accuracy", 65.0), color='gray', linestyle=':', label=f'Zero-Shot Baseline ({baseline.get("top1_accuracy", 65.0):.1f}%)')
     
     for e, acc in zip(epochs, top1_acc):
-        ax2.annotate(f"{acc:.1f}%", (e, acc), textcoords="offset points", xytext=(0, 9), ha='center', fontsize=9, fontweight='bold')
+        ax2.annotate(f"{acc:.1f}%", (e, acc), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=9, fontweight='bold')
 
     ax2.set_title('(b) Diagnostic Accuracy Trajectory', pad=10, fontweight='bold')
-    ax2.set_xlabel('Epoch', fontweight='bold')
-    ax2.set_ylabel('Accuracy (%)', fontweight='bold')
-    ax2.set_ylim(min(top1_acc) - 7, 102)
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuracy (%)')
+    ax2.set_ylim(min(top1_acc) - 5, 102)
     ax2.legend(frameon=True, facecolor='white', framealpha=0.9, loc='lower right')
     ax2.set_xticks(epochs)
 
@@ -92,7 +90,8 @@ def generate_learning_curves(history_json_path, output_dir="figures"):
     print(f"[OK] Generated: {png_path} and {pdf_path}")
     return png_path
 
-def generate_confusion_matrix(eval_json_path, output_dir="figures"):
+def generate_confusion_matrix(eval_json_path, output_dir="figures",
+                              title='Figure 2: Normalized Test Confusion Matrix (24 Disease Classes)'):
     os.makedirs(output_dir, exist_ok=True)
     with open(eval_json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -107,33 +106,21 @@ def generate_confusion_matrix(eval_json_path, output_dir="figures"):
     set_publication_style()
     fig, ax = plt.subplots(figsize=(14, 12))
     
-    if sns is not None:
-        sns.heatmap(
-            cm_norm * 100,
-            annot=True,
-            fmt='.0f',
-            cmap='Blues',
-            xticklabels=classes,
-            yticklabels=classes,
-            cbar_kws={'label': 'Recall (%)'},
-            ax=ax,
-            linewidths=0.5,
-            linecolor='white'
-        )
-    else:
-        im = ax.imshow(cm_norm * 100, cmap='Blues', aspect='auto')
-        plt.colorbar(im, ax=ax, label='Recall (%)')
-        for i in range(len(classes)):
-            for j in range(len(classes)):
-                val = cm_norm[i, j] * 100
-                color = "white" if val > 50 else "black"
-                ax.text(j, i, f"{val:.0f}", ha="center", va="center", color=color, fontsize=8)
-        ax.set_xticks(np.arange(len(classes)))
-        ax.set_yticks(np.arange(len(classes)))
-        ax.set_xticklabels(classes)
-        ax.set_yticklabels(classes)
+    sns.heatmap(
+        cm_norm * 100,
+        annot=True,
+        fmt='.0f',
+        cmap='Blues',
+        xticklabels=classes,
+        yticklabels=classes,
+        cbar_kws={'label': 'Recall (%)'},
+        ax=ax,
+        linewidths=0.5,
+        linecolor='white'
+    )
     
-    ax.set_title('Figure 2: Normalized Test Confusion Matrix (24 Disease Classes)', pad=15, fontweight='bold')
+    if title:
+        ax.set_title(title, pad=15, fontweight='bold')
     ax.set_xlabel('Predicted Disease Class', fontweight='bold', labelpad=10)
     ax.set_ylabel('Ground Truth Disease Class', fontweight='bold', labelpad=10)
     plt.xticks(rotation=45, ha='right')
@@ -173,11 +160,10 @@ def generate_per_class_barchart(zeroshot_json, finetuned_json, output_dir="figur
     x = np.arange(len(classes))
     width = 0.38
 
-    rects1 = ax.bar(x - width/2, zs_f1, width, label='Zero-Shot Pre-Trained', color='#9ecae1', edgecolor='#3182bd')
+    rects1 = ax.bar(x - width/2, zs_f1, width, label='Zero-Shot Clef-Flash (API)', color='#9ecae1', edgecolor='#3182bd')
     rects2 = ax.bar(x + width/2, ft_f1, width, label='Fine-Tuned Clef-Flash (Ours)', color='#2ca02c', edgecolor='#006837')
 
     ax.set_ylabel('F1-Score (%)', fontweight='bold')
-    ax.set_title('Figure 3: Class-Wise Diagnostic Performance Comparison (Zero-Shot Baseline vs. Fine-Tuned)', pad=15, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(classes, rotation=45, ha='right', fontsize=9.5)
     ax.set_ylim(0, 115)
@@ -187,7 +173,7 @@ def generate_per_class_barchart(zeroshot_json, finetuned_json, output_dir="figur
     for idx, c in enumerate(classes):
         diff = ft_f1[idx] - zs_f1[idx]
         if diff >= 20:
-            ax.annotate(f"+{diff:.0f}%", (x[idx] + width/2, ft_f1[idx]), textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='#006837', fontweight='bold')
+            ax.annotate(f"+{diff:.0f}", (x[idx] + width/2, ft_f1[idx]), textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='#006837', fontweight='bold')
 
     plt.tight_layout()
     png_path = os.path.join(output_dir, "figure3_classwise_comparison.png")
@@ -214,9 +200,11 @@ if __name__ == "__main__":
     ]
     eval_path = next((p for p in candidates_eval if os.path.exists(p)), None)
 
+    # Zero-shot Clef-Flash (9B) via API, bare option names: same base model as the fine-tuned one
     candidates_zs = [
-        os.path.join(BASE_DIR, "clef_test_split_eval_results.json"),
-        "clef_test_split_eval_results.json"
+        os.path.join(BASE_DIR, "zero_shot", "results", "clef_flash_test_split_eval_results.json"),
+        os.path.join(BASE_DIR, "clef_flash_test_split_eval_results.json"),
+        "clef_flash_test_split_eval_results.json"
     ]
     zs_path = next((p for p in candidates_zs if os.path.exists(p)), None)
 

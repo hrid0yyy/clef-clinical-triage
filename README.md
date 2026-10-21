@@ -1,152 +1,135 @@
-# Toward System One Clinical Intelligence: Decision Foundation Models for Triage & Explainability
+# Fine-Tuning Clef-Flash Against TF-IDF Baselines on Symptom2Disease
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-orange.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Cloudflare%2Fclef--flash-yellow.svg)](https://huggingface.co/Cloudflare/clef-flash)
+[![arXiv](https://img.shields.io/badge/arXiv-2610.15029-b31b1b.svg)](https://arxiv.org/abs/2610.15029)
 
-This repository provides the official implementation, training pipelines, causal explainability engines, and evaluation scripts for the paper:
+Code, data splits and saved results for the paper:
 
-> **Toward System One Clinical Intelligence: Parameter-Efficient Fine-Tuning and Counterfactual Explainability of Decision Foundation Models**  
-> *S. M. Mahbub Uddin Ahmed* (Department of Computer Science and Engineering, United International University)
+> **Is a 9B Decision Foundation Model Needed for Symptom-to-Disease Classification? Fine-Tuning Clef-Flash Against TF-IDF Baselines**
+> S. M. Mahbub Uddin Ahmed, Department of Computer Science and Engineering, United International University
+> arXiv:2610.15029
 
----
+## Summary
 
-## 🔬 Overview
+[Clef-Flash](https://huggingface.co/Cloudflare/clef-flash) is a 9B decision foundation model: a Qwen3.5-9B backbone with a small transformer scoring head (JointSchemaHead) that scores a fixed set of candidate labels in one forward pass, without generating text. We fine-tune it with 4-bit QLoRA on the 24-class [Symptom2Disease](https://www.kaggle.com/datasets/niyarrbarman/symptom2disease) dataset and compare it with classical baselines trained on **the same** 960/240 stratified split.
 
-In medical decision-making, clinical cognition relies on dual-process mechanisms: fast pattern recognition (**System 1**) for rapid intake and triage, complemented by deliberative reasoning (**System 2**) for complex differential workups. Standard autoregressive large language models force all diagnostic interactions through slow, sequential text generation (1.5–3.5 s latencies) and risk hallucination.
+**Main finding:** fine-tuning lifts Clef-Flash from 65.00% to 95.42% accuracy, but TF-IDF linear models on the same split reach 98.75% with sub-millisecond CPU inference. On short, keyword-rich narratives like these, the 9B model offers no accuracy advantage over a well-tuned linear classifier.
 
-**Decision Foundation Models** offer a different architectural path: by routing deep transformer representations directly into candidate class projection heads (**JointSchemaHead**) without generating intermediate tokens, they realize high-capacity System 1 clinical intelligence.
+## Results (240 test cases, same split)
 
-### Key Highlights
-* **High Diagnostic Accuracy**: Achieves **95.42% accuracy** and **0.9551 macro F1** across 24 conditions on the *Symptom2Disease* benchmark (exceeding ClinicalBERT at 90.90%).
-* **Deterministic Low Latency**: Executes in **under 80 milliseconds** per record on a single GPU (a **31-fold speedup** over generative LLM baselines).
-* **Zero Output Parsing Failures**: Candidate class probabilities are computed simultaneously in a single forward pass without autoregressive decoding loops or malformed JSON.
-* **Causal Explainability**: Audited via a causal **Leave-One-Symptom-Out (LOSO)** counterfactual perturbation framework and **Integrated Gradients** token attribution.
+| Model | Accuracy [95% Wilson CI] | Macro F1 | Latency per record |
+| :--- | :---: | :---: | :---: |
+| TF-IDF + linear SVM | **98.75%** [96.39, 99.57] | **0.9876** | 0.7 ms (laptop CPU) |
+| TF-IDF + logistic regression | **98.75%** [96.39, 99.57] | **0.9876** | 0.8 ms (laptop CPU) |
+| TF-IDF + random forest | 96.67% [93.56, 98.30] | 0.9665 | 45 ms (laptop CPU) |
+| Clef 27B, zero-shot (API) | 66.25% [60.05, 71.93] | 0.6186 | 0.92 s (API, incl. network) |
+| Clef-Flash 9B, zero-shot (API) | 62.92% [56.65, 68.78] | 0.5985 | 0.80 s (API, incl. network) |
+| Clef-Flash 9B, zero-shot (local, 4-bit) | 65.00% [58.77, 70.76] | – | – |
+| **Clef-Flash 9B, fine-tuned (QLoRA)** | 95.42% [91.98, 97.42] | 0.9551 | not measured |
 
----
+The baselines' hyperparameters were chosen by 5-fold cross-validation on the training split only. There was no validation set for Clef-Flash: the checkpoint (epoch 4) was selected on test accuracy, so its figure may be slightly optimistic. Local inference latency of the fine-tuned model was not measured.
 
-## 📁 Repository Structure
+A Leave-One-Symptom-Out (LOSO) clause ablation on four illustrative, author-written narratives shows predictions depending on distinguishing clauses. For example, removing "dry silvery scales peeling off" from a psoriasis narrative lowers the psoriasis probability from above 99.99% to 0.12% and flips the prediction to impetigo. These are case studies, not a systematic evaluation.
+
+## Repository structure
 
 ```
 clef-clinical-triage/
-├── configs/
-│   └── training_config.yaml        # Exact hyperparameters (QLoRA, lr, batch sizes)
+├── configs/training_config.yaml      # QLoRA and optimizer hyperparameters
 ├── data/
-│   ├── train_80_20.csv             # Fixed 80% training split (960 cases, 40 per class)
-│   ├── test_80_20.csv              # Fixed 20% test split (240 cases, 10 per class)
-│   ├── criteria.json               # NIH MedlinePlus diagnostic rubrics (24 conditions)
-│   └── splits_metadata.json        # Dataset partition metadata & distribution
+│   ├── train_80_20.csv               # 960 training cases (40 per class)
+│   ├── test_80_20.csv                # 240 test cases (10 per class)
+│   ├── criteria.json                 # MedlinePlus-based criteria summaries (24 classes)
+│   └── splits_metadata.json
 ├── src/
-│   ├── dataset.py                  # PyTorch Dataset encoding patient narratives into schema
-│   ├── model.py                    # Clef-Flash loader with QLoRA adapters & JointSchemaHead
-│   ├── train.py                    # Training loop with differential learning rates & loss tracking
-│   ├── evaluate.py                 # Evaluation script (Accuracy, F1, Confusion Matrix)
-│   ├── inference.py                # Sub-80ms real-time clinical triage inference
-│   └── xai_engine.py               # LOSO perturbation & Integrated Gradients attribution
+│   ├── dataset.py                    # Narrative -> decision schema encoding
+│   ├── model.py                      # Clef-Flash loading, QLoRA adapters, JointSchemaHead
+│   ├── train.py                      # Training loop (differential learning rates)
+│   ├── evaluate.py                   # Accuracy, F1, confusion matrix
+│   ├── inference.py                  # Single-narrative prediction
+│   └── xai_engine.py                 # LOSO clause ablation (also contains an
+│                                     #   Integrated Gradients routine not used in the paper)
+├── baselines/
+│   ├── run_classical_baselines.py    # TF-IDF SVM / LR / RF on the same split
+│   └── classical_baselines_results.json
+├── zero_shot/
+│   ├── evaluate_clef_flash_test_split.py               # Clef-Flash via Cloudflare Workers AI
+│   ├── evaluate_clef_test_split.py                     # Clef 27B via Cloudflare Workers AI
+│   ├── evaluate_*_with_criteria.py                     # Same, with criteria text in the prompt
+│   └── results/                                        # Saved per-case outputs and metrics
 ├── results/
-│   ├── training_history.json       # Epoch-by-epoch loss & validation trajectory
-│   └── evaluation_results.json     # Test split classwise performance metrics
-├── generate_paper_figures.py       # Reproduces paper charts (loss, confusion matrix, F1)
-├── generate_figure_overview.py     # Generates publication vector overview diagram
-├── run_xai_analysis.py             # End-to-end LOSO perturbation & saliency analysis
-├── validate_data_and_schema.py     # Pre-flight data integrity audit
-├── test_pipeline.py                # Unit test for dataset encoding & schema formulation
-├── run_finetune.sh                 # 1-Click execution script for Linux / Cloud GPUs
-├── run_finetune.bat                # 1-Click execution script for Windows GPUs
-├── requirements.txt                # Python package dependencies
-└── README.md                       # Documentation
+│   ├── training_history.json         # Per-epoch loss and test accuracy
+│   ├── evaluation_results.json       # Fine-tuned model: metrics and confusion matrix
+│   └── xai_perturbation_results.json # LOSO ablation outputs (four narratives)
+├── create_splits.py                  # Builds the stratified 80/20 split
+├── run_xai_analysis.py               # Runs the LOSO analysis on a checkpoint
+├── generate_paper_figures.py         # Training curves, confusion matrix, per-class F1
+├── generate_figure_overview.py       # Overview figure (Fig. 1)
+├── validate_data_and_schema.py       # Data and schema sanity checks
+├── test_pipeline.py                  # Dataset encoding test
+├── run_finetune.sh / run_finetune.bat
+└── requirements.txt
 ```
 
----
-
-## 🚀 Quickstart
-
-### 1. Installation
-Clone the repository and install dependencies in Python 3.10+:
+## Reproducing the results
 
 ```bash
 git clone https://github.com/hrid0yyy/clef-clinical-triage.git
 cd clef-clinical-triage
 pip install -r requirements.txt
-```
-
-### 2. Verify Data & Schemas
-Run the pre-flight verification script to ensure splits and schemas are 100% sound:
-
-```bash
 python validate_data_and_schema.py
 ```
 
-### 3. Fine-Tuning with QLoRA
-Fine-tune the 9-billion parameter model on a single 16GB–24GB GPU (RTX 4090, A10G, L4) in ~35 minutes:
+**Classical baselines (CPU, a few minutes):**
+```bash
+python baselines/run_classical_baselines.py
+```
+Latencies depend on the machine; accuracies are deterministic.
 
+**Fine-tuning (one 24 GB GPU; about 35 minutes on an RTX 4090):**
 ```bash
 python src/train.py --config configs/training_config.yaml
-```
-*Or use the 1-click script:*
-```bash
-bash run_finetune.sh
-```
-
-### 4. Evaluation
-Evaluate a trained checkpoint on the held-out 240 test cases:
-
-```bash
 python src/evaluate.py --checkpoint checkpoints/best_clef_flash_model.pt
 ```
 
-### 5. Real-Time Clinical Inference
-Run instant (<80 ms) deterministic disease triage on an uncurated patient narrative:
-
+**LOSO clause ablation:**
 ```bash
-python src/inference.py --text "I have an itchy red rash on my arms with dry silvery scales peeling off."
+python run_xai_analysis.py --checkpoint checkpoints/best_clef_flash_lora_and_head.pt
 ```
 
-### 6. Explainability & Causal Audit (XAI)
-Run Leave-One-Symptom-Out (LOSO) clause perturbation and token-level Integrated Gradients saliency:
-
+**Zero-shot API evaluation** (needs a Cloudflare account with Workers AI; run from the repository root):
 ```bash
-python run_xai_analysis.py --checkpoint checkpoints/best_clef_flash_model.pt
+export CLOUDFLARE_ACCOUNT_ID=...
+export CLOUDFLARE_API_TOKEN=...
+python zero_shot/evaluate_clef_flash_test_split.py
 ```
 
-### 7. Reproduce Paper Figures
-Reproduce publication figures (training dynamics, confusion matrix, classwise comparison) directly from logged results:
-
+**Figures from the saved results:**
 ```bash
 python generate_paper_figures.py
+python generate_figure_overview.py
 ```
 
----
+The fine-tuned checkpoint is not included because of its size.
 
-## 📊 Benchmark Comparison
+## Limitations
 
-| Model | Architecture Type | Token Generation | Diagnostic Acc. | Macro F1 | Per-Case Latency |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Random Forest** | Classical Bag-of-Words | Zero | 95.80% | 0.9570 | ~15 ms |
-| **Linear SVM** | Classical Bag-of-Words | Zero | 97.50% | 0.9740 | ~10 ms |
-| **ClinicalBERT** | Masked Language Model | Zero | 90.90% | 0.9080 | ~45 ms |
-| **CLIN-LLM** | BioBERT + FLAN-T5 (MC Dropout) | Autoregressive | 98.00% | 0.9800 | ~2,500 ms |
-| **Clef-Flash (Zero-Shot)** | 9B Decision Foundation Model | Zero | 65.00% | 0.6120 | < 80 ms |
-| **Clef-Flash (Fine-Tuned)** | **9B Decision Foundation Model** | **Zero** | **95.42%** | **0.9551** | **< 80 ms** |
+Symptom2Disease is small (1,200 narratives of about 30 words), its provenance is undocumented, and it uses a closed set of 24 labels. Results come from one training run, no paired significance test against the baselines was possible, and the ablation analysis was not reviewed by clinicians. None of this code is intended for clinical use.
 
----
-
-## 📄 Citation
-
-If you find this work or codebase helpful in your research, please cite:
+## Citation
 
 ```bibtex
-@article{ahmed2026systemone,
-  title={Toward System One Clinical Intelligence: Parameter-Efficient Fine-Tuning and Counterfactual Explainability of Decision Foundation Models},
-  author={Ahmed, S. M. Mahbub Uddin},
-  journal={arXiv preprint},
-  year={2026}
+@misc{ahmed2026clefflash,
+  title  = {Is a 9B Decision Foundation Model Needed for Symptom-to-Disease Classification? Fine-Tuning Clef-Flash Against TF-IDF Baselines},
+  author = {Ahmed, S. M. Mahbub Uddin},
+  year   = {2026},
+  eprint = {2610.15029},
+  archivePrefix = {arXiv}
 }
 ```
 
----
+## License
 
-## 📜 License
-This project is licensed under the [Apache License 2.0](LICENSE).
-Base model weights are subject to the [Cloudflare Clef License](https://huggingface.co/Cloudflare/clef-flash).
+Code is released under the [Apache License 2.0](LICENSE). The Clef and Clef-Flash weights are subject to Cloudflare's license on [Hugging Face](https://huggingface.co/Cloudflare/clef-flash). The Symptom2Disease data is from [Kaggle](https://www.kaggle.com/datasets/niyarrbarman/symptom2disease).
